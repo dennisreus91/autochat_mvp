@@ -1,12 +1,16 @@
 from flask import Flask, request, jsonify
 import openai
 import os
-import base64
 
 app = Flask(__name__)
 
 # Set your OpenAI API key from environment variable
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai_api_key = os.getenv("OPENAI_API_KEY")
+if not openai_api_key:
+    raise RuntimeError("OPENAI_API_KEY environment variable not set")
+
+# Create OpenAI client
+client = openai.OpenAI(api_key=openai_api_key)
 
 @app.route('/typebot-webhook', methods=['POST'])
 def typebot_webhook():
@@ -17,22 +21,19 @@ def typebot_webhook():
     prompt = request.form['prompt']
     image_file = request.files['file']
 
-    # Read image bytes
+    # Read image bytes for the OpenAI API
     img_bytes = image_file.read()
 
-    # Prepare image for OpenAI API (assuming gptimage1 supports base64 images)
-    image_base64 = base64.b64encode(img_bytes).decode('utf-8')
-
     try:
-        response = openai.Image.create_edit(
-            model="gptimage1",
-            image=image_base64,
+        response = client.images.edit(
+            model="dall-e-2",
+            image=img_bytes,
             prompt=prompt,
             n=1,
             size="1024x1024",
             response_format="url",
         )
-        image_url = response['data'][0]['url']
+        image_url = response.data[0].url
     except Exception as exc:
         return jsonify({'error': str(exc)}), 500
 
