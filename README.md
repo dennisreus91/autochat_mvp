@@ -3,14 +3,14 @@
 This repository contains a minimal Flask backend that can receive an
 uploaded photo of a room and a textual prompt describing the desired
 renovation.  The request is forwarded to OpenAI's API using the
-`gptimage1` model to generate a new design image.
+`dall-e-2` model to generate a new design image.
 
 ## Running locally
 
 1. Install dependencies:
 
    ```bash
-   pip install flask openai
+   pip install -r requirements.txt
    ```
 
 2. Set your OpenAI API key in the environment:
