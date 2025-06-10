@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import openai
+import requests
 import os
 
 app = Flask(__name__)
@@ -15,14 +16,33 @@ client = openai.OpenAI(api_key=openai_api_key)
 @app.route('/typebot-webhook', methods=['POST'])
 def typebot_webhook():
     """Receive image and prompt from Typebot and return a new image URL."""
-    if 'prompt' not in request.form or 'file' not in request.files:
-        return jsonify({'error': 'missing prompt or file'}), 400
+    img_bytes = None
+    prompt = None
 
-    prompt = request.form['prompt']
-    image_file = request.files['file']
+    # First handle JSON bodies (e.g. Content-Type: application/json)
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+        prompt = data.get("prompt")
+        image_url = data.get("file")
+        if not prompt or not image_url:
+            return jsonify({'error': 'missing prompt or file'}), 400
 
-    # Read image bytes for the OpenAI API
-    img_bytes = image_file.read()
+        # Fetch the image from the provided URL
+        try:
+            resp = requests.get(image_url)
+            resp.raise_for_status()
+            img_bytes = resp.content
+        except Exception as exc:
+            return jsonify({'error': f'failed to fetch image: {exc}'}), 400
+
+    else:
+        # Fallback: handle multipart form-data requests
+        if 'prompt' not in request.form or 'file' not in request.files:
+            return jsonify({'error': 'missing prompt or file'}), 400
+
+        prompt = request.form['prompt']
+        image_file = request.files['file']
+        img_bytes = image_file.read()
 
     try:
         response = client.images.edit(

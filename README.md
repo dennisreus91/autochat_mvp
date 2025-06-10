@@ -25,6 +25,7 @@ renovation.  The request is forwarded to OpenAI's API using the
    python app.py
    ```
 
-4. Configure your Typebot flow to send a `POST` request with a file field
-   named `file` and a text field named `prompt` to the `/typebot-webhook`
-   endpoint.
+4. Configure your Typebot flow to send a `POST` request to the
+   `/typebot-webhook` endpoint. You can either send multipart form-data with
+   a file field named `file` and a text field named `prompt`, or send a JSON
+   body with keys `file` (containing an image URL) and `prompt`.
