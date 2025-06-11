@@ -28,4 +28,7 @@ renovation.  The request is forwarded to OpenAI's API using the
 4. Configure your Typebot flow to send a `POST` request to the
    `/typebot-webhook` endpoint. You can either send multipart form-data with
    a file field named `file` and a text field named `prompt`, or send a JSON
-   body with keys `file` (containing an image URL) and `prompt`.
+    body with keys `file` (containing an image URL) and `prompt`. When using
+    the JSON approach the server downloads the image with a 10‑second
+    timeout. If the download does not finish in time, the API responds with a
+    `504` error.
