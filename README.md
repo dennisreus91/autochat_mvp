@@ -27,8 +27,11 @@ renovation.  The request is forwarded to OpenAI's API using the
 
 4. Configure your Typebot flow to send a `POST` request to the
    `/typebot-webhook` endpoint. You can either send multipart form-data with
-   a file field named `file` and a text field named `prompt`, or send a JSON
-   body with keys `file` (containing an image URL) and `prompt`.
+  a file field named `file` and a text field named `prompt`, or send a JSON
+  body with keys `file` (containing an image URL) and `prompt`. When using
+  the JSON approach the server downloads the image with a 10‑second
+  timeout. If the download does not finish in time, the API responds with a
+  `504` error.
 
 Flask's default logging writes to the console. Inspect these logs for
 information about request handling and any image download errors when
