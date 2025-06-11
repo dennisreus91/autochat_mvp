@@ -19,6 +19,19 @@ def typebot_webhook():
     img_bytes = None
     prompt = None
 
+    # Log the request type and keys present
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+        app.logger.info(
+            "typebot_webhook: JSON request with keys: %s", list(data.keys())
+        )
+    else:
+        app.logger.info(
+            "typebot_webhook: form request with form keys=%s files keys=%s",
+            list(request.form.keys()),
+            list(request.files.keys()),
+        )
+
     # First handle JSON bodies (e.g. Content-Type: application/json)
     if request.is_json:
         data = request.get_json(silent=True) or {}
@@ -32,7 +45,9 @@ def typebot_webhook():
             resp = requests.get(image_url)
             resp.raise_for_status()
             img_bytes = resp.content
+            app.logger.info("Downloaded image from %s successfully", image_url)
         except Exception as exc:
+            app.logger.error("Failed to download image from %s: %s", image_url, exc)
             return jsonify({'error': f'failed to fetch image: {exc}'}), 400
 
     else:

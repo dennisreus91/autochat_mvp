@@ -29,3 +29,7 @@ renovation.  The request is forwarded to OpenAI's API using the
    `/typebot-webhook` endpoint. You can either send multipart form-data with
    a file field named `file` and a text field named `prompt`, or send a JSON
    body with keys `file` (containing an image URL) and `prompt`.
+
+Flask's default logging writes to the console. Inspect these logs for
+information about request handling and any image download errors when
+troubleshooting.
