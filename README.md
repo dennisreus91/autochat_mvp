@@ -32,3 +32,14 @@ renovation.  The request is forwarded to OpenAI's API using the
     the JSON approach the server downloads the image with a 10‑second
     timeout. If the download does not finish in time, the API responds with a
     `504` error.
+
+   The OpenAI call runs in the background. The webhook immediately returns a
+   `task_id`:
+
+   ```json
+   {"task_id": "<uuid>"}
+   ```
+
+   Poll `GET /task/<task_id>` to retrieve the result. While processing, the
+   endpoint returns a `202` status with `{"status": "pending"}`. When done it
+   responds with the generated `image_url`.

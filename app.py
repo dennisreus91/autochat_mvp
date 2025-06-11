@@ -2,6 +2,11 @@ from flask import Flask, request, jsonify
 import openai
 import requests
 import os
+import uuid
+import threading
+
+
+tasks = {}
 
 app = Flask(__name__)
 
@@ -46,21 +51,43 @@ def typebot_webhook():
         image_file = request.files['file']
         img_bytes = image_file.read()
 
-    try:
-        response = client.images.edit(
-            model="dall-e-2",
-            image=img_bytes,
-            prompt=prompt,
-            n=1,
-            size="1024x1024",
-            response_format="url",
-        )
-        image_url = response.data[0].url
-    except Exception as exc:
-        return jsonify({'error': str(exc)}), 500
+    task_id = str(uuid.uuid4())
+    tasks[task_id] = {'status': 'pending', 'result': None}
 
-    # Respond with the generated image URL
-    return jsonify({'image_url': image_url})
+    def run_openai():
+        try:
+            response = client.images.edit(
+                model="dall-e-2",
+                image=img_bytes,
+                prompt=prompt,
+                n=1,
+                size="1024x1024",
+                response_format="url",
+            )
+            image_url = response.data[0].url
+            tasks[task_id] = {
+                'status': 'done',
+                'result': {'image_url': image_url}
+            }
+        except Exception as exc:
+            tasks[task_id] = {
+                'status': 'error',
+                'result': {'error': str(exc)}
+            }
+
+    threading.Thread(target=run_openai, daemon=True).start()
+
+    return jsonify({'task_id': task_id}), 202
+
+
+@app.route('/task/<task_id>', methods=['GET'])
+def get_task(task_id):
+    task = tasks.get(task_id)
+    if not task:
+        return jsonify({'error': 'invalid task id'}), 404
+    if task['status'] == 'pending':
+        return jsonify({'status': 'pending'}), 202
+    return jsonify(task['result'])
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
